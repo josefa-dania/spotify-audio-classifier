@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan2Sound | DSP Audio Classifier</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(29, 185, 84, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(29, 185, 84, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Floating Music Notes */
+        .floating-note {
+            position: fixed;
+            font-size: 20px;
+            opacity: 0.1;
+            animation: float 20s infinite linear;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.15;
+            }
+            90% {
+                opacity: 0.15;
+            }
+            100% {
+                transform: translateY(-20vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Dashboard Container */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* LEFT PANEL - Input Section */
+        .input-panel {
+            width: 45%;
+            background: rgba(18, 18, 24, 0.92);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        /* RIGHT PANEL - Results Section */
+        .results-panel {
+            width: 55%;
+            margin-left: 45%;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        /* Logo */
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            padding: 10px 24px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            font-size: 12px;
+            opacity: 0.5;
+            margin-top: -20px;
+            margin-bottom: 32px;
+            padding-left: 20px;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .auth-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-connected {
+            color: #1DB954;
+        }
+
+        .status-disconnected {
+            color: #ff6b6b;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Spotify Button */
+        .btn-spotify {
+            width: 100%;
+            background: linear-gradient(135deg, #1DB954 0%, #1aa34a 100%);
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+        }
+
+        .btn-spotify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.4);
+        }
+
+        /* Scanner */
+        .scanner-container {
+            background: #000;
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            position: relative;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+        }
+
+        #reader {
+            width: 100%;
+            height: 100%;
+        }
+
+        #reader video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Input Group */
+        .input-group {
+            margin: 16px 0;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #1DB954;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: white;
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Result Card */
+        .result-card {
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.15), rgba(0, 0, 0, 0.6));
+            border-radius: 32px;
+            border: 1px solid rgba(29, 185, 84, 0.2);
+            overflow: hidden;
+            animation: slideIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .track-header {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .album-art {
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            object-fit: cover;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .track-info {
+            flex: 1;
+        }
+
+        .track-name {
+            font-weight: 800;
+            font-size: 20px;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .track-artist {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-bottom: 12px;
+        }
+
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* DSP Section */
+        .dsp-section {
+            padding: 24px;
+        }
+
+        .dsp-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.5;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 16px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .feature-label {
+            font-size: 11px;
+            opacity: 0.5;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-value {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1DB954;
+        }
+
+        .processing-time {
+            font-size: 11px;
+            text-align: right;
+            opacity: 0.4;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Loader */
+        .loader-container {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(29, 185, 84, 0.2);
+            border-top-color: #1DB954;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .error-message {
+            padding: 40px;
+            background: rgba(255, 50, 50, 0.15);
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            border-radius: 32px;
+            color: #ff6b6b;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 32px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            opacity: 0.2;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+            opacity: 0.5;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1DB954;
+            border-radius: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            .input-panel {
+                width: 100%;
+                position: relative;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .results-panel {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Music Notes -->
+    <div class="floating-note" style="left: 10%; animation-duration: 18s;"><i class="fas fa-music"></i></div>
+    <div class="floating-note" style="left: 30%; animation-duration: 25s; animation-delay: 2s;"><i class="fas fa-headphones"></i></div>
+    <div class="floating-note" style="left: 50%; animation-duration: 22s; animation-delay: 5s;"><i class="fas fa-microphone-alt"></i></div>
+    <div class="floating-note" style="left: 70%; animation-duration: 20s; animation-delay: 1s;"><i class="fas fa-music"></i></div>
+    <div class="floating-note" style="left: 85%; animation-duration: 28s; animation-delay: 8s;"><i class="fas fa-headphones"></i></div>
+
+    <div class="dashboard">
+        <!-- LEFT PANEL - Input -->
+        <div class="input-panel">
+            <div class="logo">
+                <i class="fas fa-waveform"></i>
+                <h1>Scan2Sound</h1>
+            </div>
+            <div class="tagline">
+                <i class="fas fa-microchip"></i> DSP-Powered Audio Classification
+            </div>
+
+            <div class="status-bar">
+                <div class="auth-status" id="authStatus">
+                    <i class="fas fa-circle"></i>
+                    <span>Not connected</span>
+                </div>
+                <button class="btn-icon" onclick="logout()" id="logoutBtn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+
+            <button class="btn-spotify" onclick="login()" id="loginBtn">
+                <i class="fab fa-spotify"></i>
+                <span>Connect Spotify</span>
+            </button>
+
+            <div class="scanner-container">
+                <div id="reader"></div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="linkInput" placeholder="Paste Spotify track link...">
+            </div>
+
+            <button class="btn-submit" onclick="submitLink()">
+                <i class="fas fa-microchip"></i>
+                <span>Analyze with DSP</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- RIGHT PANEL - Results -->
+        <div class="results-panel">
+            <div id="result">
+                <div class="empty-state">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>No Analysis Yet</h3>
+                    <p>Scan a QR code or paste a Spotify link<br>to see DSP analysis results here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log("✅ Scan2Sound DSP App Loaded");
+
+        function extractTrackId(url) {
+            try {
+                let match = url.match(/track\/([a-zA-Z0-9]+)/);
+                return match ? match[1] : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function login() {
+            window.location.href = "/login";
+        }
+
+        function logout() {
+            window.location.href = "/logout";
+        }
+
+        function checkAuth() {
+            fetch("/check-auth")
+                .then(res => res.json())
+                .then(data => {
+                    const statusDiv = document.getElementById("authStatus");
+                    const logoutBtn = document.getElementById("logoutBtn");
+                    const loginBtn = document.getElementById("loginBtn");
+                    
+                    if (data.authenticated) {
+                        statusDiv.innerHTML = `<i class="fas fa-circle" style="color: #1DB954;"></i><span>Connected as ${data.user}</span>`;
+                        logoutBtn.style.display = "flex";
+                        loginBtn.style.display = "none";
+                    } else {
+                        statusDiv.innerHTML = `<i class="fas fa-circle" style="color: #ff6b6b;"></i><span>Not connected</span>`;
+                        logoutBtn.style.display = "none";
+                        loginBtn.style.display = "flex";
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function getCategoryColor(category) {
+            if (category.includes("Party")) return { bg: "rgba(231, 76, 60, 0.2)", color: "#e74c3c", icon: "fa-fire" };
+            if (category.includes("Dance")) return { bg: "rgba(243, 156, 18, 0.2)", color: "#f39c12", icon: "fa-music" };
+            if (category.includes("Rock")) return { bg: "rgba(192, 57, 43, 0.2)", color: "#c0392b", icon: "fa-guitar" };
+            if (category.includes("Slow")) return { bg: "rgba(52, 152, 219, 0.2)", color: "#3498db", icon: "fa-heart" };
+            if (category.includes("Chill")) return { bg: "rgba(46, 204, 113, 0.2)", color: "#2ecc71", icon: "fa-cloud-moon" };
+            if (category.includes("Pop")) return { bg: "rgba(155, 89, 182, 0.2)", color: "#9b59b6", icon: "fa-star" };
+            return { bg: "rgba(29, 185, 84, 0.2)", color: "#1DB954", icon: "fa-music" };
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById("result");
+            
+            if (data.error) {
+                resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> ${data.error}</div>`;
+                return;
+            }
+            
+            const catStyle = getCategoryColor(data.category);
+            
+            let dspHtml = '';
+            if (data.dsp && data.dsp.tempo) {
+                dspHtml = `
+                    <div class="dsp-section">
+                        <div class="dsp-title">
+                            <i class="fas fa-microchip"></i>
+                            <span>DIGITAL SIGNAL PROCESSING ANALYSIS</span>
+                        </div>
+                        <div class="feature-grid">
+                            <div class="feature-item">
+                                <div class="feature-label"><i class="fas fa-tachometer-alt"></i> Tempo (BPM)</div>
+                                <div class="feature-value">${data.dsp.tempo}</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-label"><i class="fas fa-bolt"></i> RMS Energy</div>
+                                <div class="feature-value">${data.dsp.energy}</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-label"><i class="fas fa-chart-line"></i> Spectral Centroid</div>
+                                <div class="feature-value">${data.dsp.spectral_centroid}</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-label"><i class="fas fa-waveform"></i> Zero Crossing Rate</div>
+                                <div class="feature-value">${data.dsp.zero_crossing_rate}</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-label"><i class="fas fa-chart-bar"></i> Spectral Bandwidth</div>
+                                <div class="feature-value">${data.dsp.spectral_bandwidth || 'N/A'}</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-label"><i class="fas fa-chart-pie"></i> Confidence</div>
+                                <div class="feature-value">${data.confidence || '85%'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="result-card">
+                    <div class="track-header">
+                        <img class="album-art" src="${data.image}" alt="Album art" onerror="this.src='https://via.placeholder.com/100'">
+                        <div class="track-info">
+                            <div class="track-name">${escapeHtml(data.name)}</div>
+                            <div class="track-artist">${escapeHtml(data.artist)}</div>
+                            <div class="category-badge" style="background: ${catStyle.bg}; color: ${catStyle.color};">
+                                <i class="fas ${catStyle.icon}"></i>
+                                <span>${data.category}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${dspHtml}
+                    <div class="processing-time">
+                        <span><i class="fas fa-clock"></i> Processed in ${data.processing_time_ms || 'N/A'} ms</span>
+                        <span><i class="fas fa-check-circle" style="color: #1DB954;"></i> Saved to Library</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function fetchTrack(trackId) {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <div class="loader-container">
+                    <div class="loader"></div>
+                    <div class="loader-text">
+                        <i class="fas fa-microchip"></i> DSP Analysis in progress...
+                    </div>
+                </div>
+            `;
+            
+            fetch("/get-track", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({track_id: trackId})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    if (data.error.toLowerCase().includes("login")) {
+                        window.location.href = "/login";
+                        return;
+                    }
+                    resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> ${data.error}</div>`;
+                    return;
+                }
+                displayResult(data);
+            })
+            .catch(err => {
+                resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-wifi"></i> Network error. Please try again.</div>`;
+            });
+        }
+
+        function submitLink() {
+            const link = document.getElementById("linkInput").value.trim();
+            if (!link) {
+                alert("Please paste a Spotify track link");
+                return;
+            }
+            
+            const trackId = extractTrackId(link);
+            if (!trackId) {
+                alert("Invalid Spotify track link");
+                return;
+            }
+            
+            fetchTrack(trackId);
+        }
+
+        let scanner = null;
+        
+        function onScanSuccess(decodedText) {
+            if (scanner) {
+                scanner.clear();
+                scanner = null;
+            }
+            
+            const trackId = extractTrackId(decodedText);
+            if (trackId) {
+                fetchTrack(trackId);
+            } else {
+                alert("Invalid Spotify QR code");
+                startScanner();
+            }
+        }
+        
+        function startScanner() {
+            if (typeof Html5QrcodeScanner === "undefined") {
+                setTimeout(startScanner, 1000);
+                return;
+            }
+            
+            try {
+                if (scanner) scanner.clear();
+                scanner = new Html5QrcodeScanner("reader", {
+                    fps: 10,
+                    qrbox: {width: 250, height: 250}
+                });
+                scanner.render(onScanSuccess);
+            } catch (err) {
+                document.getElementById("reader").innerHTML = '<div style="padding: 40px; text-align: center; color: #ff6b6b;"><i class="fas fa-camera"></i> Camera access failed</div>';
+            }
+        }
+
+        // Create floating notes
+        for (let i = 0; i < 8; i++) {
+            const note = document.createElement('div');
+            note.className = 'floating-note';
+            note.style.left = Math.random() * 100 + '%';
+            note.style.animationDuration = 15 + Math.random() * 20 + 's';
+            note.style.animationDelay = Math.random() * 10 + 's';
+            const icons = ['fa-music', 'fa-headphones', 'fa-microphone-alt', 'fa-drum', 'fa-guitar'];
+            note.innerHTML = '<i class="fas ' + icons[Math.floor(Math.random() * icons.length)] + '"></i>';
+            document.body.appendChild(note);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            startScanner();
+            checkAuth();
+            
+            document.getElementById("linkInput").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") submitLink();
+            });
+            
+            setInterval(checkAuth, 30000);
+        });
+    </script>
+</body>
+</html>
