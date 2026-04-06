@@ -1,4 +1,4 @@
-# 🎵 Scan2Sound - DSP Audio Classifier
+# 🎵 VibeCheck - DSP Audio Classifier
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-2.3-green.svg)](https://flask.palletsprojects.com/)
@@ -27,4 +27,4 @@ A **Digital Signal Processing (DSP)** project that analyzes Spotify tracks using
 | Spectral Bandwidth | Frequency spread | Sound texture |
 | MFCCs | Mel-frequency cepstrum | Timbre features |
 
-## 📊 Classification Logic
+
