@@ -165,51 +165,43 @@ def classify_by_dsp(features):
     energy = features['rms_energy']
     centroid = features['spectral_centroid_hz']
     
-    # ========== LOVE SONGS (High tempo + lower centroid + moderate energy) ==========
-    # Pogathey: 152 BPM, 0.1622 energy, 2655 centroid → Slow
-    # Vaaya Veera: 152 BPM, 0.1770 energy, 2725 centroid → Slow
+
     if (tempo >= 140 and energy <= 0.180 and centroid <= 2800):
         category = "😌 Slow"
         confidence = 0.88
         reason = f"Love ballad (Tempo: {tempo:.0f} BPM, Centroid: {centroid:.0f} Hz)"
     
-    # ========== PARTY SONGS (High energy + high centroid) ==========
-    # Party On My Mind: 122 BPM, 0.1590 energy, 4071 centroid → Party
-    # Came Wit the Posse should be Party but got Slow - fix below
+  
     elif (energy >= 0.150 and centroid >= 2800) or (tempo >= 120 and energy >= 0.200):
         category = "🔥 Party"
         confidence = 0.88
         reason = f"High energy ({energy:.4f}), Bright sound ({centroid:.0f} Hz)"
     
-    # ========== DANCE SONGS (Medium-high energy, moderate tempo) ==========
-    # Levitating: 102 BPM, 0.2785 energy → Dance
-    # Gasolina: 95 BPM, 0.0424 energy → Dance
-    # Vilambara: 108 BPM, 0.2330 energy → Dance
-    # Rush: 134 BPM, 0.1600 energy → Dance
+    
     elif (energy >= 0.150 and centroid <= 2800) or (tempo <= 110 and energy >= 0.150):
         category = "💃 Dance"
         confidence = 0.85
         reason = f"Dance beat (Tempo: {tempo:.0f} BPM, Energy: {energy:.4f})"
     
-    # ========== ROCK SONGS (High centroid + high energy) ==========
+
     elif centroid >= 3500 and energy >= 0.120:
         category = "🎸 Rock"
         confidence = 0.85
         reason = f"Rock (Centroid: {centroid:.0f} Hz, Energy: {energy:.4f})"
     
-    # ========== SLOW (Low tempo or low energy) ==========
+   
     elif tempo <= 100 or energy <= 0.080:
         category = "😌 Slow"
         confidence = 0.84
         reason = f"Slow tempo ({tempo:.0f} BPM), Low energy ({energy:.4f})"
     
-    # ========== CHILL ==========
+
     elif energy <= 0.120:
         category = "🌿 Chill"
         confidence = 0.80
         reason = f"Relaxed energy ({energy:.4f})"
     
-    # ========== POP (Default) ==========
+
     else:
         category = "🎵 Pop"
         confidence = 0.75
@@ -320,14 +312,32 @@ def get_track():
         print(f"📈 Centroid: {dsp_features['spectral_centroid_hz']:.0f} Hz")
         print(f"🏷️ Classification: {category}")
         
-        # Save to Spotify library
+        PLAYLIST_NAME = "VibeCheck"  
+
         try:
-            sp.current_user_saved_tracks_add([f"spotify:track:{track_id}"])
-            print("✅ Saved to library!")
+            # Get current user
+            user = sp.current_user()
+            user_id = user['id']
+            
+            playlists = sp.current_user_playlists(limit=50)
+            playlist_id = None
+            
+            for p in playlists['items']:
+                if p['name'] == PLAYLIST_NAME:
+                    playlist_id = p['id']
+                    print(f"✅ Found existing playlist: {PLAYLIST_NAME}")
+                    break
+            
+            # Add track to playlist
+            sp.playlist_add_items(playlist_id, [f"spotify:track:{track_id}"])
+            print(f"✅ Added to {PLAYLIST_NAME} !")
             save_success = True
+            save_message = f"Added to '{PLAYLIST_NAME}' !"
+            
         except Exception as e:
-            print(f"⚠️ Save error: {e}")
+            print(f"⚠️ Playlist error: {e}")
             save_success = False
+            save_message = f"Could not add to playlist: {str(e)}"
         
         # Clean up temp files
         try:
@@ -389,7 +399,7 @@ def logout():
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("🎵 Scan2Sound - DSP Classification with YouTube Audio")
+    print("🎵 VibeCheck ")
     print("   Real audio analysis for ANY track!")
     print("="*60)
     print("📍 http://127.0.0.1:5000")
