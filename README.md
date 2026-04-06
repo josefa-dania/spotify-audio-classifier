@@ -6,17 +6,17 @@
 
 A **Digital Signal Processing (DSP)** project that analyzes Spotify tracks using real audio features like tempo, spectral centroid, RMS energy, and zero-crossing rate to classify songs into categories.
 
-## ✨ Features
+##  Features
 
-- 📷 **QR Code Scanning** - Scan Spotify track QR codes
-- 🔗 **Manual Link Input** - Paste any Spotify track URL
-- 🎵 **YouTube Audio Download** - Fetches actual audio for DSP analysis
-- 🔬 **Real DSP Analysis** - Extracts tempo, energy, spectral centroid, ZCR, MFCCs
-- 🏷️ **Intelligent Classification** - Party, Dance, Rock, Slow, Chill, Pop
-- 💾 **Spotify Integration** - Saves analyzed tracks to your library
-- 🎨 **Modern Dashboard UI** - Professional side-by-side layout
+-  **QR Code Scanning** - Scan Spotify track QR codes
+-  **Manual Link Input** - Paste any Spotify track URL
+-  **YouTube Audio Download** - Fetches actual audio for DSP analysis
+-  **Real DSP Analysis** - Extracts tempo, energy, spectral centroid, ZCR, MFCCs
+-  **Intelligent Classification** - Party, Dance, Rock, Slow, Chill, Pop
+-  **Spotify Integration** - Saves analyzed tracks to your library
+-  **Modern Dashboard UI** - Professional side-by-side layout
 
-## 🎯 DSP Features Extracted
+##  DSP Features Extracted
 
 | Feature | DSP Method | Description |
 |---------|------------|-------------|
