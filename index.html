@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scan2Sound | DSP Audio Classifier</title>
+    <title>VibeCheck | DSP </title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -496,7 +496,7 @@
         <div class="input-panel">
             <div class="logo">
                 <i class="fas fa-waveform"></i>
-                <h1>Scan2Sound</h1>
+                <h1>VibeCheck</h1>
             </div>
             <div class="tagline">
                 <i class="fas fa-microchip"></i> DSP-Powered Audio Classification
@@ -596,76 +596,77 @@
             return { bg: "rgba(29, 185, 84, 0.2)", color: "#1DB954", icon: "fa-music" };
         }
 
-        function displayResult(data) {
-            const resultDiv = document.getElementById("result");
-            
-            if (data.error) {
-                resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> ${data.error}</div>`;
-                return;
-            }
-            
-            const catStyle = getCategoryColor(data.category);
-            
-            let dspHtml = '';
-            if (data.dsp && data.dsp.tempo) {
-                dspHtml = `
-                    <div class="dsp-section">
-                        <div class="dsp-title">
-                            <i class="fas fa-microchip"></i>
-                            <span>DIGITAL SIGNAL PROCESSING ANALYSIS</span>
-                        </div>
-                        <div class="feature-grid">
-                            <div class="feature-item">
-                                <div class="feature-label"><i class="fas fa-tachometer-alt"></i> Tempo (BPM)</div>
-                                <div class="feature-value">${data.dsp.tempo}</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-label"><i class="fas fa-bolt"></i> RMS Energy</div>
-                                <div class="feature-value">${data.dsp.energy}</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-label"><i class="fas fa-chart-line"></i> Spectral Centroid</div>
-                                <div class="feature-value">${data.dsp.spectral_centroid}</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-label"><i class="fas fa-waveform"></i> Zero Crossing Rate</div>
-                                <div class="feature-value">${data.dsp.zero_crossing_rate}</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-label"><i class="fas fa-chart-bar"></i> Spectral Bandwidth</div>
-                                <div class="feature-value">${data.dsp.spectral_bandwidth || 'N/A'}</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-label"><i class="fas fa-chart-pie"></i> Confidence</div>
-                                <div class="feature-value">${data.confidence || '85%'}</div>
-                            </div>
-                        </div>
+       function displayResult(data) {
+    const resultDiv = document.getElementById("result");
+    
+    if (data.error) {
+        resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> ${data.error}</div>`;
+        return;
+    }
+    
+    const catStyle = getCategoryColor(data.category);
+    
+    let dspHtml = '';
+    if (data.dsp && data.dsp.tempo) {
+        dspHtml = `
+            <div class="dsp-section">
+                <div class="dsp-title">
+                    <i class="fas fa-microchip"></i>
+                    <span>DIGITAL SIGNAL PROCESSING ANALYSIS</span>
+                </div>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-label"><i class="fas fa-tachometer-alt"></i> Tempo (BPM)</div>
+                        <div class="feature-value">${data.dsp.tempo}</div>
                     </div>
-                `;
-            }
-            
-            resultDiv.innerHTML = `
-                <div class="result-card">
-                    <div class="track-header">
-                        <img class="album-art" src="${data.image}" alt="Album art" onerror="this.src='https://via.placeholder.com/100'">
-                        <div class="track-info">
-                            <div class="track-name">${escapeHtml(data.name)}</div>
-                            <div class="track-artist">${escapeHtml(data.artist)}</div>
-                            <div class="category-badge" style="background: ${catStyle.bg}; color: ${catStyle.color};">
-                                <i class="fas ${catStyle.icon}"></i>
-                                <span>${data.category}</span>
-                            </div>
-                        </div>
+                    <div class="feature-item">
+                        <div class="feature-label"><i class="fas fa-bolt"></i> RMS Energy</div>
+                        <div class="feature-value">${data.dsp.energy}</div>
                     </div>
-                    ${dspHtml}
-                    <div class="processing-time">
-                        <span><i class="fas fa-clock"></i> Processed in ${data.processing_time_ms || 'N/A'} ms</span>
-                        <span><i class="fas fa-check-circle" style="color: #1DB954;"></i> Saved to Library</span>
+                    <div class="feature-item">
+                        <div class="feature-label"><i class="fas fa-chart-line"></i> Spectral Centroid</div>
+                        <div class="feature-value">${data.dsp.spectral_centroid}</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-label"><i class="fas fa-waveform"></i> Zero Crossing Rate</div>
+                        <div class="feature-value">${data.dsp.zero_crossing_rate}</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-label"><i class="fas fa-chart-bar"></i> Spectral Bandwidth</div>
+                        <div class="feature-value">${data.dsp.spectral_bandwidth || 'N/A'}</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-label"><i class="fas fa-chart-pie"></i> Confidence</div>
+                        <div class="feature-value">${data.confidence || '85%'}</div>
                     </div>
                 </div>
-            `;
-        }
-
+            </div>
+        `;
+    }
+    
+    resultDiv.innerHTML = `
+        <div class="result-card">
+            <div class="track-header">
+                <img class="album-art" src="${data.image}" alt="Album art" onerror="this.src='https://via.placeholder.com/100'">
+                <div class="track-info">
+                    <div class="track-name">${escapeHtml(data.name)}</div>
+                    <div class="track-artist">${escapeHtml(data.artist)}</div>
+                    <div class="category-badge" style="background: ${catStyle.bg}; color: ${catStyle.color};">
+                        <i class="fas ${catStyle.icon}"></i>
+                        <span>${data.category}</span>
+                    </div>
+                </div>
+            </div>
+            ${dspHtml}
+            <div class="save-status">
+                <i class="fas fa-list"></i> ${data.save_message || 'Added to VibeCheck playlist'}
+            </div>
+            <div class="processing-time">
+                <i class="fas fa-clock"></i> Processed in ${data.processing_time_ms || 'N/A'} ms
+            </div>
+        </div>
+    `;
+}
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
